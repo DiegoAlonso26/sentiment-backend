@@ -17,7 +17,9 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://sentiment-frontend-gamma.vercel.app/"
+    # --- ¡CORRECCIÓN 1! ---
+    # Quité la barra "/" al final. Debe ser la URL exacta.
+    "https://sentiment-frontend-gamma.vercel.app"
 ]
 
 app.add_middleware(
@@ -74,8 +76,7 @@ async def obtener_info_video(video_id: str):
 # --- 5. Función para obtener comentarios (MEJORADA) ---
 async def obtener_comentarios_youtube(video_id: str):
     """
-    Obtiene HASTA 500 comentarios de un video de YouTube,
-    manejando la paginación automáticamente.
+    Obtiene HASTA 100 comentarios. Esto previene timeouts en Render.
     """
     if not API_KEY:
         raise HTTPException(
@@ -88,7 +89,9 @@ async def obtener_comentarios_youtube(video_id: str):
         comentarios = []
         next_page_token = None
 
-        while len(comentarios) < 500:
+
+        # Cambiado de 500 a 100 para evitar el error 502 Bad Gateway
+        while len(comentarios) < 100:
             request = youtube.commentThreads().list(
                 part="snippet",
                 videoId=video_id,
@@ -107,7 +110,8 @@ async def obtener_comentarios_youtube(video_id: str):
             if not next_page_token:
                 break
 
-        return comentarios[:500]
+
+        return comentarios[:100]
 
     except Exception as e:
         print(f"Error al llamar a la API de YouTube: {e}")
